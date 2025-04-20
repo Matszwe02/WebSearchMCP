@@ -10,7 +10,7 @@ class BraveApi:
         self.api_endpoint = "https://api.search.brave.com/res/v1/web/search"
 
 
-    def search(self, query: str) -> list[dict[str, str]] | None:
+    def search(self, query: str, count: int = 10) -> list[dict[str, str]] | None:
         if not query: return None
         
         headers = {
@@ -18,7 +18,7 @@ class BraveApi:
             "Accept-Encoding": "gzip",
             "X-Subscription-Token": self.api_key,
         }
-        params = {"q": query}
+        params = {"q": query, "count": count}
         
         try:
             response = requests.get(self.api_endpoint, params=params, headers=headers)

@@ -1,5 +1,6 @@
 import logging
 from brave_api import BraveApi
+import concurrent.futures
 from page_loader import PageLoader
 from llm import Assistant
 
@@ -11,10 +12,11 @@ class SearchTool:
         self.brave_api_instance = BraveApi(api_key=self.api_key)
 
 
-    def get_raw_results(self, query: str) -> list[dict]:
+    def get_raw_results(self, query: str, count: int = 20) -> list[dict]:
         """
         Args:
             query: The search query string.
+            count: The maximum number of search results to return.
 
         Returns:
             A list of dictionaries containing the raw search results,
@@ -22,7 +24,7 @@ class SearchTool:
         """
         
         try:
-            search_results = self.brave_api_instance.search(query)
+            search_results = self.brave_api_instance.search(query, count=count)
         except Exception as e:
             logging.error(f"Error calling Brave API in SearchTool (get_raw_results): {e}")
             return []
@@ -74,25 +76,34 @@ class SearchAndPrettyPageTool:
         self.search_tool = SearchTool(brave_api_key=brave_api_key)
         self.pretty_page_tool = PrettyPageTool()
         self.assistant = Assistant(api_key, api_url, model_name)
-
-
+    
+    def _process_result_sync(self, result_info, query, context):
+        url = result_info['url']
+        title = result_info['title']
+        
+        prettified_content = self.pretty_page_tool.execute(url)
+        
+        trimmed_content = self.assistant.context_trim(f'{query}: {context}', prettified_content) or ''
+        return f"# {title}\n[{url}]\n\n{trimmed_content}\n\n################\n\n"
+    
     def execute(self, query: str, context: str) -> str:
+        search_results_list = self.search_tool.get_raw_results(query, 4)
+        page_outputs = [""] * len(search_results_list)
         
-        search_results_list = self.search_tool.get_raw_results(query)
-        page_outputs = []
-        
-        for result_info in search_results_list:
-            url = result_info['url']
-            title = result_info['title']
-
-            prettified_content = self.pretty_page_tool.execute(url)
-            if prettified_content.startswith("Error:"):
-                logging.warning(f"SearchAndPrettyPageTool: Could not prettify page: {url}")
-                page_outputs.append(f"# {title}\n[{url}]\n\nCould not fetch or convert content.\n\n################\n\n")
-                continue
+        with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
+            future_to_index = {
+                executor.submit(self._process_result_sync, result_info, query, context): i
+                for i, result_info in enumerate(search_results_list)
+            }
             
-            trimmed_content = self.assistant.context_trim(f'{query}: {context}', prettified_content) or ''
-            
-            page_outputs.append(f"# {title}\n[{url}]\n\n{trimmed_content}\n\n################\n\n")
+            for future in concurrent.futures.as_completed(future_to_index):
+                index = future_to_index[future]
+                try:
+                    page_outputs[index] = future.result()
+                except Exception as exc:
+                    logging.error(f"Result {index} generated an exception: {exc}")
+                    url = search_results_list[index]['url']
+                    title = search_results_list[index]['title']
+                    page_outputs[index] = f"# {title}\n[{url}]\n\n\n\n################\n\n"
         
         return "".join(page_outputs).strip()
