@@ -10,11 +10,16 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 load_dotenv()
 
+api_key = os.environ.get("OPENAI_API_KEY")
+api_url = os.environ.get("OPENAI_API_URL", None)
+model_name = os.environ.get("OPENAI_MODEL_NAME")
+brave_api_key = os.environ.get("BRAVE_API_KEY")
+
 server = Server("web_search_mcp")
 
-search_tool_instance = SearchTool(brave_api_key=os.environ.get("BRAVE_API_KEY"))
+search_tool_instance = SearchTool(brave_api_key=brave_api_key)
 pretty_page_tool_instance = PrettyPageTool()
-search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(brave_api_key=os.environ.get("BRAVE_API_KEY"))
+search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key=api_key, api_url=api_url, model_name=model_name, brave_api_key=brave_api_key)
 
 
 SEARCH_WEB_INPUT_SCHEMA = {
@@ -108,6 +113,8 @@ if __name__ == "__main__":
     sse_transport = SseServerTransport(MESSAGE_ENDPOINT_PATH)
     
     async def handle_sse_connection(request: Request):
+        import asyncio # Import asyncio here
+        await asyncio.sleep(0.5) # Introduce a 0.5 second delay
         async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
             await server.run(streams[0], streams[1], server.create_initialization_options())
     

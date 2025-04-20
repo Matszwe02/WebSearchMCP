@@ -6,10 +6,8 @@ from llm import Assistant
 
 class SearchTool:
 
-    def __init__(self, brave_api_key = None):
+    def __init__(self, brave_api_key):
         self.api_key = brave_api_key
-        if not self.api_key:
-            raise ValueError("BRAVE_API_KEY environment variable not set for SearchTool.")
         self.brave_api_instance = BraveApi(api_key=self.api_key)
 
 
@@ -71,10 +69,11 @@ class PrettyPageTool:
 
 
 class SearchAndPrettyPageTool:
-    def __init__(self, brave_api_key = None):
+    def __init__(self, api_key, api_url, model_name, brave_api_key):
+        
         self.search_tool = SearchTool(brave_api_key=brave_api_key)
         self.pretty_page_tool = PrettyPageTool()
-        self.assistant = Assistant()
+        self.assistant = Assistant(api_key, api_url, model_name)
 
 
     def execute(self, query: str, context: str) -> str:

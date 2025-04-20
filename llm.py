@@ -29,12 +29,11 @@ Line-numbered Content:
 
 class Assistant:
 
-    def __init__(self):
-        load_dotenv()
-        self.api_key = os.environ.get("OPENAI_API_KEY")
-        self.api_url = os.environ.get("OPENAI_API_URL", None)
-        self.model_name = os.environ.get("OPENAI_MODEL_NAME")
-        self.client = OpenAI(api_key=self.api_key,base_url=self.api_url)
+    def __init__(self, api_key, api_url, model_name):
+        self.api_key = api_key
+        self.api_url = api_url
+        self.model_name = model_name
+        self.client = OpenAI(api_key=self.api_key, base_url=self.api_url)
 
 
     def get_response(self, system_prompt: str, query: str) -> str | None:
