@@ -1,0 +1,7 @@
+services:
+    web_search_mcp:
+        build: .
+        ports:
+        - "5000:5000"
+        volumes:
+            - ./:/app/env
