@@ -5,9 +5,11 @@ from mcp.server.lowlevel import Server
 from mcp.types import Tool, TextContent
 from mcp_tools import SearchTool, PrettyPageTool, SearchAndPrettyPageTool
 from dotenv import load_dotenv
+from starlette.routing import Mount, Route
+from starlette.requests import Request
+import asyncio
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 load_dotenv(dotenv_path="./env/.env")
 
 api_key = os.environ.get("OPENAI_API_KEY")
@@ -40,7 +42,7 @@ SEARCH_PROCESS_PAGES_INPUT_SCHEMA = {
     "type": "object",
     "properties": {
         "query": {"type": "string", "description": "The search query."},
-        "context": {"type": "string", "description": "Context for trimming page content. Must be very descriptive, only parts mathing it will be returned"},
+        "context": {"type": "string", "description": "Used to filter out irrevelant page contents. An external LLM will return page content exclusively relevant to it."},
     },
     "required": ["query", "context"],
 }
@@ -51,7 +53,7 @@ async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
             name="search_web",
-            description="Searches the web using Brave Search and returns search results (URLs and page titles). Must be followed by pretty_page tool.",
+            description="Searches the web using Brave Search and returns search results (URLs and page titles). Must be followed by pretty_page tool, its descriptions cannot be interpreted directly.",
             inputSchema=SEARCH_WEB_INPUT_SCHEMA
         ),
         Tool(
@@ -61,7 +63,7 @@ async def handle_list_tools() -> list[Tool]:
         ),
         Tool(
             name="search_process_pages",
-            description="Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and gathering information.",
+            description="Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and processing information in short form.",
             inputSchema=SEARCH_PROCESS_PAGES_INPUT_SCHEMA
         )
     ]
@@ -104,21 +106,16 @@ async def handle_tool_call(name: str, arguments: dict[str, str]) -> list[TextCon
 
 
 
-if __name__ == "__main__":
-    import uvicorn
-    from starlette.applications import Starlette
-    from starlette.routing import Mount, Route
-    from starlette.requests import Request
-    MESSAGE_ENDPOINT_PATH = "/mcp_messages/"
-    sse_transport = SseServerTransport(MESSAGE_ENDPOINT_PATH)
-    
-    async def handle_sse_connection(request: Request):
-        import asyncio # Import asyncio here
-        await asyncio.sleep(2) # Introduce a 2 second delay
-        async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
-            await server.run(streams[0], streams[1], server.create_initialization_options())
-    
-    routes = [Route("/", endpoint=handle_sse_connection, methods=["GET"]), Mount(MESSAGE_ENDPOINT_PATH, app=sse_transport.handle_post_message)]
-    
-    app = Starlette(routes = routes)
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+sse_transport = SseServerTransport("/websearch/mcp_messages/")
+
+
+async def handle_sse_connection(request: Request):
+    await asyncio.sleep(2)
+    async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
+        await server.run(streams[0], streams[1], server.create_initialization_options())
+
+
+routes = [
+    Route("/websearch/", endpoint=handle_sse_connection, methods=["GET"]),
+    Mount("/websearch/mcp_messages/", app=sse_transport.handle_post_message)
+]
