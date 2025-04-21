@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-load_dotenv()
+load_dotenv(dotenv_path="./env/.env")
 
 api_key = os.environ.get("OPENAI_API_KEY")
 api_url = os.environ.get("OPENAI_API_URL", None)
@@ -121,4 +121,4 @@ if __name__ == "__main__":
     routes = [Route("/", endpoint=handle_sse_connection, methods=["GET"]), Mount(MESSAGE_ENDPOINT_PATH, app=sse_transport.handle_post_message)]
     
     app = Starlette(routes = routes)
-    uvicorn.run(app, port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)
