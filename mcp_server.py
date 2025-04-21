@@ -114,7 +114,7 @@ if __name__ == "__main__":
     
     async def handle_sse_connection(request: Request):
         import asyncio # Import asyncio here
-        await asyncio.sleep(0.5) # Introduce a 0.5 second delay
+        await asyncio.sleep(2) # Introduce a 2 second delay
         async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
             await server.run(streams[0], streams[1], server.create_initialization_options())
     
