@@ -51,7 +51,7 @@ async def handle_list_tools() -> list[Tool]:
     return [
         Tool(
             name="search_web",
-            description="Searches the web using Brave Search and returns search results.",
+            description="Searches the web using Brave Search and returns search results (URLs and page titles). Must be followed by pretty_page tool.",
             inputSchema=SEARCH_WEB_INPUT_SCHEMA
         ),
         Tool(
@@ -61,7 +61,7 @@ async def handle_list_tools() -> list[Tool]:
         ),
         Tool(
             name="search_process_pages",
-            description="Searches web, fetches pages, trims content based on context, returns formatted results.",
+            description="Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and gathering information.",
             inputSchema=SEARCH_PROCESS_PAGES_INPUT_SCHEMA
         )
     ]
@@ -75,7 +75,7 @@ async def handle_tool_call(name: str, arguments: dict[str, str]) -> list[TextCon
         if not query:
             return [TextContent(type="text", text="Error: Missing search query.")]
         try:
-            return [TextContent(type="text", text=search_tool_instance.execute(query))]
+            return [TextContent(type="text", text=search_tool_instance.execute(query) + '\n\nHere are the searched websites. Now you can use pretty_page tool to read them.')]
         except Exception as e:
             return [TextContent(type="text", text=f"Error during web search: {e}")]
     
