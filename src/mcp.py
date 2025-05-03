@@ -15,6 +15,7 @@ class MCP:
         self.active_sse_connections = {}
         
         self.app.add_api_route(f"/{self.endpoint}", self.sse_endpoint)
+        self.app.add_api_route(f"/{self.endpoint}/sse", self.sse_endpoint)
         self.app.add_api_route(f"/{self.endpoint}/messages", self.post_handler, methods=["POST"], name="post_handler")
 
 
@@ -28,7 +29,15 @@ class MCP:
         message_queue = asyncio.Queue()
         self.active_sse_connections[session_id] = message_queue
         
-        messages_url = f"{request.base_url}{self.endpoint}/messages?session_id={session_id}"
+        forwarded_proto = request.headers.get("X-Forwarded-Proto")
+        host = request.headers.get("Host")
+        
+        if forwarded_proto and host:
+            base_url = f"{forwarded_proto}://{host}"
+        else:
+            base_url = str(request.base_url)
+        
+        messages_url = f"{base_url}/{self.endpoint}/messages?session_id={session_id}"
         
         async def event_generator(messages_url):
             message_queue = self.active_sse_connections.get(session_id)
