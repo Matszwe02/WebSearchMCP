@@ -12,4 +12,4 @@ COPY src .
 
 EXPOSE 5000
 
-CMD ["python3", "mcp_server.py"]
+CMD ["python3", "main.py"]
