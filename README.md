@@ -25,3 +25,10 @@ The server exposes the following tools for use by an MCP client:
         *   `query` (string) - The search query.
         *   `context` (string) - Descriptive context used by the AI to determine relevant sections of the page content.
     *   Output: A concatenated string containing the title, URL, and AI-trimmed Markdown content for each search result, separated by `################`.
+
+
+## Proxy
+
+This service supports proxy to pass requests through. It's used once request without proxy doesn't work
+
+- proxy has to accept `?url=https...` GET requests

@@ -1,11 +1,12 @@
 import requests
 from markdownify import markdownify as md
+from urllib.parse import quote
 
 class PageLoader:
     """
     A class to fetch the content of a URL and convert it to Markdown.
     """
-    def __init__(self, url: str):
+    def __init__(self, url: str, proxy: str|None = None):
         """
         Initializes the PageLoader with a URL.
 
@@ -14,19 +15,27 @@ class PageLoader:
         """
         if not url.startswith(('http://', 'https://')):
             raise ValueError("Invalid URL format. URL must start with http:// or https://")
+        
+        self.proxy = proxy
         self.url = url
+        
         self.html_content = None
         self.markdown_content = None
 
-    def __fetch_html(self) -> str | None:
+    def __fetch_html(self, proxy = False) -> str | None:
         """
         Fetches the HTML content from the URL.
 
         Returns:
             The HTML content as a string, or None if the request fails.
         """
+        
         try:
-            response = requests.get(self.url, timeout=10)
+            if proxy:
+                print(f'Using proxy: {self.proxy} for request')
+                response = requests.get(self.proxy + '?url=' + quote(self.url), timeout=30)
+            else:
+                response = requests.get(self.url, timeout=10)
             response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
             self.html_content = response.text
             return self.html_content
@@ -62,6 +71,8 @@ class PageLoader:
             The Markdown content as a string, or None if any step fails.
         """
         if self.__fetch_html():
+            return self.__convert_to_markdown()
+        elif self.__fetch_html(proxy=True):
             return self.__convert_to_markdown()
         else:
             return None

@@ -52,12 +52,12 @@ class SearchTool:
 
 class PrettyPageTool:
 
-    def __init__(self):
-        pass
+    def __init__(self, proxy: str|None = None):
+        self.proxy = proxy
 
     def execute(self, url: str) -> str:
         try:
-            page_loader = PageLoader(url)
+            page_loader = PageLoader(url, self.proxy)
             markdown_content = page_loader.get_markdown()
 
             if markdown_content:
@@ -71,10 +71,10 @@ class PrettyPageTool:
 
 
 class SearchAndPrettyPageTool:
-    def __init__(self, api_key, api_url, model_name, brave_api_key):
+    def __init__(self, api_key, api_url, model_name, brave_api_key, proxy: str|None = None):
         
         self.search_tool = SearchTool(brave_api_key=brave_api_key)
-        self.pretty_page_tool = PrettyPageTool()
+        self.pretty_page_tool = PrettyPageTool(proxy)
         self.assistant = Assistant(api_key, api_url, model_name)
     
     def _process_result_sync(self, result_info, query, context):

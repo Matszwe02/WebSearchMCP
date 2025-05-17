@@ -15,10 +15,11 @@ api_key = os.environ.get("OPENAI_API_KEY")
 api_url = os.environ.get("OPENAI_API_URL", None)
 model_name = os.environ.get("OPENAI_MODEL_NAME")
 brave_api_key = os.environ.get("BRAVE_API_KEY")
+proxy = os.environ.get("PROXY", None)
 
 search_tool_instance = SearchTool(brave_api_key=brave_api_key)
-pretty_page_tool_instance = PrettyPageTool()
-search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key=api_key, api_url=api_url, model_name=model_name, brave_api_key=brave_api_key)
+pretty_page_tool_instance = PrettyPageTool(proxy)
+search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key, api_url, model_name, brave_api_key, proxy)
 
 app = FastAPI()
 

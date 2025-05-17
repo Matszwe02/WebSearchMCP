@@ -10,13 +10,17 @@ from sse_starlette.sse import EventSourceResponse
 class MCP:
     def __init__(self, app: FastAPI, endpoint = ""):
         self.endpoint = endpoint.strip('/')
+        if self.endpoint: self.endpoint += '/'
         self.app = app
         self.tools = []
         self.active_sse_connections = {}
         
+        self.app.add_api_route(f"//{self.endpoint}", self.sse_endpoint)
+        self.app.add_api_route(f"//{self.endpoint}/sse", self.sse_endpoint)
+        self.app.add_api_route(f"//{self.endpoint}/messages", self.post_handler, methods=["POST"], name="post_handler")
         self.app.add_api_route(f"/{self.endpoint}", self.sse_endpoint)
-        self.app.add_api_route(f"/{self.endpoint}/sse", self.sse_endpoint)
-        self.app.add_api_route(f"/{self.endpoint}/messages", self.post_handler, methods=["POST"], name="post_handler")
+        self.app.add_api_route(f"/{self.endpoint}sse", self.sse_endpoint)
+        self.app.add_api_route(f"/{self.endpoint}messages", self.post_handler, methods=["POST"], name="post_handler")
 
 
     def add_tool(self, tool_dict, tool_method):
