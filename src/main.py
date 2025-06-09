@@ -19,7 +19,6 @@ proxy = os.environ.get("PROXY", None)
 
 search_tool_instance = SearchTool(brave_api_key=brave_api_key)
 pretty_page_tool_instance = PrettyPageTool(proxy)
-search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key, api_url, model_name, brave_api_key, proxy)
 
 app = FastAPI()
 
@@ -55,20 +54,22 @@ mcp_server.add_tool(
     pretty_page_tool_instance.execute
 )
 
-mcp_server.add_tool(
-    {
-        "name": "search_process_pages",
-        "description": "Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and processing information in short form.",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "The search query."},
-                "context": {"type": "string", "description": "Used to filter out irrevelant page contents. An external LLM will return page content exclusively relevant to it."},
-            },
-            "required": ["query", "context"],
-        }
-    },
-    search_and_pretty_page_tool_instance.execute
-)
+if api_key and model_name:
+    search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key, api_url, model_name, brave_api_key, proxy)
+    mcp_server.add_tool(
+        {
+            "name": "search_process_pages",
+            "description": "Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and processing information in short form.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "The search query."},
+                    "context": {"type": "string", "description": "Used to filter out irrevelant page contents. An external LLM will return page content exclusively relevant to it."},
+                },
+                "required": ["query", "context"],
+            }
+        },
+        search_and_pretty_page_tool_instance.execute
+    )
 
 uvicorn.run(app, host="0.0.0.0", port=5000)

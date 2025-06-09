@@ -18,7 +18,7 @@ The server exposes the following tools for use by an MCP client:
     *   Input: `url` (string) - The URL of the web page.
     *   Output: Markdown content of the page, or an error message.
 
-3.  **`search_process_pages`**:
+3.  **`search_process_pages`** (optional - enabled when LLM settings are provided in .env):
     
     Performs a web search, fetches the content of each result URL, converts it to Markdown, and then uses an AI assistant to trim the content, keeping only the parts relevant to the provided context.
     *   Input:
