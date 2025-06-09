@@ -23,7 +23,7 @@ search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key, api_url,
 
 app = FastAPI()
 
-mcp_server = MCP(endpoint='websearch', app=app)
+mcp_server = MCP(app=app)
 
 mcp_server.add_tool(
     {
@@ -70,11 +70,5 @@ mcp_server.add_tool(
     },
     search_and_pretty_page_tool_instance.execute
 )
-
-
-async def hello_world(request: Request):
-    return HTMLResponse("<h1>Endpoints:</h1><ul><li><b>/websearch</b> - web search and process</li></ul>")
-
-app.add_api_route("/", hello_world, methods=["GET"])
 
 uvicorn.run(app, host="0.0.0.0", port=5000)
