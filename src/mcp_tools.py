@@ -50,7 +50,7 @@ class SearchTool:
         return markdown_results.strip()
 
 
-class PrettyPageTool:
+class PrintPageTool:
 
     def __init__(self, proxy: str|None = None):
         self.proxy = proxy
@@ -66,22 +66,22 @@ class PrettyPageTool:
             return None
         
         except Exception as e:
-            logging.error(f"Error processing URL '{url}' in PrettyPageTool: {e}")
+            logging.error(f"Error processing URL '{url}' in PrintPageTool: {e}")
             return None
 
 
-class SearchAndPrettyPageTool:
+class SearchAndPrintPageTool:
     def __init__(self, api_key, api_url, model_name, brave_api_key, proxy: str|None = None):
         
         self.search_tool = SearchTool(brave_api_key=brave_api_key)
-        self.pretty_page_tool = PrettyPageTool(proxy)
+        self.print_page_tool = PrintPageTool(proxy)
         self.assistant = Assistant(api_key, api_url, model_name)
     
     def _process_result_sync(self, result_info, query, context):
         url = result_info['url']
         title = result_info['title']
         
-        prettified_content = self.pretty_page_tool.execute(url)
+        prettified_content = self.print_page_tool.execute(url)
         
         trimmed_content = self.assistant.context_trim(f'{query}: {context}', prettified_content) or ''
         return f"# {title}\n[{url}]\n\n{trimmed_content}\n\n################\n\n"

@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 
 from mcp import MCP
-from mcp_tools import SearchTool, PrettyPageTool, SearchAndPrettyPageTool
+from mcp_tools import SearchTool, PrintPageTool, SearchAndPrintPageTool
 
 
 
@@ -18,7 +18,7 @@ brave_api_key = os.environ.get("BRAVE_API_KEY")
 proxy = os.environ.get("PROXY", None)
 
 search_tool_instance = SearchTool(brave_api_key=brave_api_key)
-pretty_page_tool_instance = PrettyPageTool(proxy)
+print_page_tool_instance = PrintPageTool(proxy)
 
 app = FastAPI()
 
@@ -27,7 +27,7 @@ mcp_server = MCP(app=app)
 mcp_server.add_tool(
     {
         "name": "search_web",
-        "description": "Searches the web using Brave Search and returns search results (URLs and page titles). Must be followed by pretty_page tool, its descriptions cannot be interpreted directly.",
+        "description": "Searches the web using Brave Search and returns search results (URLs and page titles). Must be followed by print_page tool, its descriptions cannot be interpreted directly, as it contains only references to actual data.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -41,25 +41,25 @@ mcp_server.add_tool(
 
 mcp_server.add_tool(
     {
-        "name": "pretty_page",
-        "description": "Fetches and pretty prints a web page as markdown.",
+        "name": "print_page",
+        "description": "Fetches and prints a web page as markdown.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "The URL of the web page to pretty print."},
+                "url": {"type": "string", "description": "The URL of the web page to print."},
             },
             "required": ["url"],
         }
     },
-    pretty_page_tool_instance.execute
+    print_page_tool_instance.execute
 )
 
 if api_key and model_name:
-    search_and_pretty_page_tool_instance = SearchAndPrettyPageTool(api_key, api_url, model_name, brave_api_key, proxy)
+    search_and_print_page_tool_instance = SearchAndPrintPageTool(api_key, api_url, model_name, brave_api_key, proxy)
     mcp_server.add_tool(
         {
             "name": "search_process_pages",
-            "description": "Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and processing information in short form.",
+            "description": "Searches web, fetches pages, trims content based on context, returns formatted results. Prefer using this tool for all research, as it incorporates both searching and processing information in short form, minimising context usage.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -69,7 +69,7 @@ if api_key and model_name:
                 "required": ["query", "context"],
             }
         },
-        search_and_pretty_page_tool_instance.execute
+        search_and_print_page_tool_instance.execute
     )
 
 uvicorn.run(app, host="0.0.0.0", port=5000)

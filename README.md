@@ -12,7 +12,7 @@ The server exposes the following tools for use by an MCP client:
     *   Input: `query` (string) - The search query.
     *   Output: Markdown formatted list of search results.
 
-2.  **`pretty_page`**:
+2.  **`print_page`**:
     
     Fetches the content of a given URL and converts it to Markdown format.
     *   Input: `url` (string) - The URL of the web page.
