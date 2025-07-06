@@ -46,6 +46,8 @@ class SearchTool:
             url = result.get('url', 'No URL')
             description = result.get('description', 'No Description')
             markdown_results += f"- **[{title}]({url})**\n  {description}\n\n"
+            markdown_results += "\n\n\n\n**Here are the search results for this search query**"
+            markdown_results += "\n\nRemember that their descriptions are only for reference - you need to print_page each of the result you want to use"
         
         return markdown_results.strip()
 
